@@ -1,10 +1,6 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-"""
-Run inference on images, videos, directories, streams, etc.
+# Original file : https://github.com/ultralytics/yolov5/blob/master/detect.py
+# Editted for report generation and customization
 
-Usage:
-    $ python path/to/detect.py --source path/to/img.jpg --weights yolov5s.pt --img 640
-"""
 
 import argparse
 import sys
@@ -20,10 +16,10 @@ import torch.backends.cudnn as cudnn
 
 
 
-price_sheet =  pd.read_excel(open('elec_items.xlsx','rb'))
-
+price_sheet = ""
 FILE = Path(__file__).absolute()
-sys.path.append(FILE.parents[0].as_posix() + "/yolov5")  # add yolov5/ to path
+ROOT_PATH = Path("..").absolute()
+sys.path.append(ROOT_PATH.parents[0].as_posix() + "/yolov5")  # add yolov5/ to path
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -60,6 +56,7 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
         hide_labels=False,  # hide labels
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
+        price_list=""
         ):
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -73,6 +70,9 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
     set_logging()
     device = select_device(device)
     half &= device.type != 'cpu'  # half precision only supported on CUDA
+
+    # Read file list
+    price_sheet = pd.read_excel(open(price_list,'rb'))
 
     # Load model
     w = weights[0] if isinstance(weights, list) else weights
@@ -270,6 +270,8 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
     item_price_df = pd.DataFrame.from_dict(item_prices)
     item_price_df.to_excel("final_price.xlsx", sheet_name="Prices" )
 
+    print("Filed saved to 'final_price.xlsx'")
+
 
 def parse_opt():
     parser = argparse.ArgumentParser()
@@ -297,6 +299,7 @@ def parse_opt():
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
+    parser.add_argument('--price-list', type=str, help='Price list of items')
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     return opt
@@ -311,3 +314,4 @@ def main(opt):
 if __name__ == "__main__":
     opt = parse_opt()
     main(opt)
+
